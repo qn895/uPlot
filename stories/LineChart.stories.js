@@ -9,21 +9,21 @@ export default {
 import { createSelector } from "reselect";
 
 const generateData = multiplier => {
-  var loop = 10 
-	let data = [Array(loop), Array(loop)];
+  var loop = 1000 
+	let data = [Array(loop), Array(loop), Array(loop)];
 
 	for (var i = 0; i < loop; i++) {
 		let x = i;
 		let y = i*multiplier;
 
 		data[0][i] = x;
-		data[1][i] = y;
+    data[1][i] = y;
+    data[2][i] = y**2;
   }
   return data;
 };
 
 const generateOpts = (multiplier) => {
-  console.log(1*multiplier)
   const opts = {
     width: 800,
     height: 400,
@@ -44,11 +44,21 @@ const generateOpts = (multiplier) => {
       },
       y: [
         {
-          label: "sin(x)",
+          label: "line data",
+          color: "green",
+          width: multiplier,
+          type: 'line',
+          dash: [5, 15]
+        },
+        {
+          label: "scatter data",
+          scale: 'mb',
           color: "red",
-          width: 1*multiplier,
+          width: 1,
+          type: 'scatter'
           // dash: [2*multiplier, 3]
         }
+
       ]
     },
     axes: {
@@ -60,8 +70,15 @@ const generateOpts = (multiplier) => {
           space: 50,
           label: "Y Axis",
           color: "red",
-          class: "foo"
-        }
+          class: "foo",
+          values: (vals, space) => vals.map(v => +v.toFixed(2) + "scfd"),
+        },
+        {
+          side: 3,
+          scale: 'mb',
+          values: (vals, space) => vals.map(v => +v.toFixed(2) + "bbld"),
+          grid: null,
+      }
       ]
     }
   };
@@ -77,17 +94,27 @@ class Plot extends React.Component {
     this.uPlot = null;
 	}
 
-	updatePlot = createSelector(
-		[props => props.opts, props => props.data],
-		(opts, data) => {
+	updateData = createSelector(
+		[data => data],
+		(data) => {
 			// console.log("opts, data", opts, data);
 			// let u = new uPlot(opts, data);
 			if (this.omnivizInstance !== null && this.uPlot !== null) {
 				this.uPlot.setData(data);
-				// return u;
 			}
 		}
+  );
+  
+  updateOpt = createSelector(
+		[opts => opts],
+		(opts) => {
+      if (this.omnivizInstance !== null && this.uPlot !== null) {
+				this.uPlot.setOptions(opts);
+			}
+
+		}
 	);
+
 	componentDidMount() {
 		const { opts, data } = this.props;
     let u = new uPlot(opts, data);
@@ -97,7 +124,9 @@ class Plot extends React.Component {
 
 	render() {
 		const { id } = this.props;
-		this.updatePlot(this.props);
+    this.updateData(this.props.data);
+    this.updateOpt(this.props.opts);
+
 		return (
 			<div
 				id={id}
@@ -110,17 +139,18 @@ class Plot extends React.Component {
 		);
 	}
 }
+const autoData = generateData(3);
+const opts = generateOpts(4);
 
 export const IntervalExample = () => {
 	const [seconds, setSeconds] = useState(0);
 	useEffect(() => {
 		const interval = setInterval(() => {
       setSeconds(seconds => seconds + 1);
-		}, 10000);
+		}, 2000);
 		return () => clearInterval(interval);
   }, []);
-  const autoData = generateData(seconds);
-  const opts = generateOpts(seconds)
+  // console.log("seconds", seconds, "opts", opts)
 	return (
 		<Plot id={"my-uuid"} opts={opts} data ={autoData}>
 		</Plot>

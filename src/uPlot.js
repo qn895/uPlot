@@ -1,7 +1,6 @@
 import {
 	fmtDate,
 	tzDate,
-
 	getFullYear,
 	getMonth,
 	getDate,
@@ -9,12 +8,11 @@ import {
 	getHours,
 	getMinutes,
 	getSeconds,
-	getMilliseconds,
-} from './fmtDate';
+	getMilliseconds
+} from "./fmtDate";
 
 import {
 	inf,
-
 	abs,
 	floor,
 	round,
@@ -32,7 +30,6 @@ import {
 	pxRatio,
 	incrRoundUp,
 	incrRoundDn,
-
 	WIDTH,
 	HEIGHT,
 	TOP,
@@ -44,37 +41,34 @@ import {
 	createElement,
 	hexBlack,
 	classList,
-
 	mousemove,
 	mousedown,
 	mouseup,
 	dblclick,
 	resize,
 	scroll,
-
 	assign,
 	isArr,
-
-	fnOrSelf,
-} from './utils';
+	fnOrSelf
+} from "./utils";
 
 import {
 	xAxisOpts,
 	yAxisOpts,
 	xSeriesOpts,
 	ySeriesOpts,
-
 	timeIncrs,
 	numIncrs,
 	timeAxisVals,
 	numAxisVals,
-
 	timeSeriesVal,
 	numSeriesVal,
-
 	timeSeriesLabel,
-	numSeriesLabel,
-} from './opts';
+	numSeriesLabel
+} from "./opts";
+
+import React from "react";
+import ReactDOM from "react-dom";
 
 let syncs = {};
 
@@ -99,22 +93,22 @@ function _sync(opts) {
 }
 
 function setDefaults(d, xo, yo) {
-	return [d.x].concat(d.y).map((o, i) => assign({}, (i == 0 ? xo : yo), o));
+	return [d.x].concat(d.y).map((o, i) => assign({}, i == 0 ? xo : yo, o));
 }
 
 function splitXY(d) {
 	return {
 		x: d[0],
-		y: d.slice(1),
+		y: d.slice(1)
 	};
 }
 
 export default function uPlot(opts, data) {
 	const self = this;
 
-	const series  = setDefaults(opts.series, xSeriesOpts, ySeriesOpts);
-	const axes    = setDefaults(opts.axes || {}, xAxisOpts, yAxisOpts);
-	const scales  = (opts.scales = opts.scales || {});
+	let series = setDefaults(opts.series, xSeriesOpts, ySeriesOpts);
+	const axes = setDefaults(opts.axes || {}, xAxisOpts, yAxisOpts);
+	const scales = (opts.scales = opts.scales || {});
 
 	self.tzDate = opts.tzDate || (ts => new Date(ts * 1e3));
 
@@ -122,34 +116,42 @@ export default function uPlot(opts, data) {
 	self.axes = splitXY(axes);
 	self.scales = scales;
 
-	const legend = assign({}, {show: true}, opts.legend);
+	const legend = assign({}, { show: true }, opts.legend);
 
-	// set default value
-	series.forEach((s, i) => {
-		// init scales & defaults
-		const key = s.scale;
+	const updateSeries = (opts) => {
+		series = setDefaults(opts.series, xSeriesOpts, ySeriesOpts)
+		// set default value
+		series.forEach((s, i) => {
+			// init scales & defaults
+			const key = s.scale;
 
-		const sc = scales[key] = assign({
-			time: i == 0,
-			auto: true,
-			min:  inf,
-			max: -inf,
-		}, scales[key]);
+			const sc = (scales[key] = assign(
+				{
+					time: i == 0,
+					auto: true,
+					min: inf,
+					max: -inf
+				},
+				scales[key]
+			));
 
-		// by default, numeric y scales snap to half magnitude of range
-		sc.range = fnOrSelf(sc.range || (i > 0 && !sc.time ? snapHalfMag : snapNone));
+			// by default, numeric y scales snap to half magnitude of range
+			sc.range = fnOrSelf(
+				sc.range || (i > 0 && !sc.time ? snapHalfMag : snapNone)
+			);
 
-		if (s.time == null)
-			s.time = sc.time;
+			if (s.time == null) s.time = sc.time;
 
-		let isTime = s.time;
+			let isTime = s.time;
 
-		s.value = s.value || (isTime ? timeSeriesVal : numSeriesVal);
-		s.label = s.label || (isTime ? timeSeriesLabel : numSeriesLabel);
-		s.width = s.width || 1;
-	});
-
-	const cursor = assign({}, {show: true}, opts.cursor);
+			s.value = s.value || (isTime ? timeSeriesVal : numSeriesVal);
+			s.label = s.label || (isTime ? timeSeriesLabel : numSeriesLabel);
+			s.width = s.width || 1;
+		});
+	};
+	
+	updateSeries(opts);
+	const cursor = assign({}, { show: true }, opts.cursor);
 
 	let dataLen;
 
@@ -158,13 +160,23 @@ export default function uPlot(opts, data) {
 	self.i1 = null;
 
 	function setData(_data, _i0, _i1) {
+		// console.log("setData being called");
 		data = _data;
 		dataLen = data[0].length;
 		resetSeries();
 		setView(_i0 != null ? _i0 : self.i0, _i1 != null ? _i1 : self.i1);
 	}
 
+	function setOptions(_opts, _i0, _i1) {
+		// console.log("setOptions", _opts,)
+		series = _opts.series;
+		updateSeries(_opts)
+		resetSeries();
+		setView(_i0 != null ? _i0 : self.i0, _i1 != null ? _i1 : self.i1);
+	}
+
 	self.setData = setData;
+	self.setOptions = setOptions;
 
 	function setStylePx(el, name, value) {
 		el.style[name] = value + "px";
@@ -180,11 +192,9 @@ export default function uPlot(opts, data) {
 
 	const root = placeDiv("uplot");
 
-	if (opts.id != null)
-		root.id = opts.id;
+	if (opts.id != null) root.id = opts.id;
 
-	if (opts.class != null)
-		root[classList].add(opts.class);
+	if (opts.class != null) root[classList].add(opts.class);
 
 	if (opts.title != null) {
 		let title = placeDiv("title", root);
@@ -217,26 +227,24 @@ export default function uPlot(opts, data) {
 			let w = axis[WIDTH] + lab;
 			canCssWidth -= w;
 
-			if (side == 1)
-				plotLft += w;
-		}
-		else {
+			if (side == 1) plotLft += w;
+		} else {
 			let h = axis[HEIGHT] + lab;
 			canCssHeight -= h;
 
-			if (side == 2)
-				plotTop += h;
+			if (side == 2) plotTop += h;
 		}
 
-		if (axis.time == null)
-			axis.time = scales[axis.scale].time;
+		if (axis.time == null) axis.time = scales[axis.scale].time;
 
 		// also set defaults for incrs & values based on axis type
 		let isTime = axis.time;
 
 		axis.incrs = axis.incrs || (isTime ? timeIncrs : numIncrs);
 		axis.values = axis.values || (isTime ? timeAxisVals : numAxisVals);
-		axis.range = fnOrSelf(axis.range || (isTime ? snapMinDate : snapMinNum));
+		axis.range = fnOrSelf(
+			axis.range || (isTime ? snapMinDate : snapMinNum)
+		);
 		axis.space = fnOrSelf(axis.space);
 	});
 
@@ -264,13 +272,11 @@ export default function uPlot(opts, data) {
 			if (side == 1) {
 				setStylePx(el, RIGHT, off1);
 				off1 += w;
-			}
-			else {
+			} else {
 				setStylePx(el, LEFT, off3);
 				off3 += w;
 			}
-		}
-		else {
+		} else {
 			let h = crossDim || axis[HEIGHT];
 			setStylePx(el, HEIGHT, h);
 			setStylePx(el, WIDTH, canCssWidth);
@@ -279,8 +285,7 @@ export default function uPlot(opts, data) {
 			if (side == 2) {
 				setStylePx(el, BOTTOM, off2);
 				off2 += h;
-			}
-			else {
+			} else {
 				setStylePx(el, TOP, off0);
 				off0 += h;
 			}
@@ -312,10 +317,8 @@ export default function uPlot(opts, data) {
 
 				let style = txt.style;
 
-				if (side == 3)
-					setOriRotTrans(style, "0 0", 90, -LABEL_HEIGHT);
-				else
-					setOriRotTrans(style, "100% 0", -90, -canCssHeight);
+				if (side == 3) setOriRotTrans(style, "0 0", 90, -LABEL_HEIGHT);
+				else setOriRotTrans(style, "100% 0", -90, -canCssHeight);
 			}
 		}
 	});
@@ -342,25 +345,22 @@ export default function uPlot(opts, data) {
 
 		return {
 			can,
-			ctx,
+			ctx
 		};
 	}
 
 	function placeDiv(cls, targ) {
 		let div = doc[createElement]("div");
 
-		if (cls != null)
-			addClass(div, cls);
+		if (cls != null) addClass(div, cls);
 
-		if (targ != null)
-			targ.appendChild(div);		// TODO: chart.appendChild()
+		if (targ != null) targ.appendChild(div); // TODO: chart.appendChild()
 
 		return div;
 	}
 
 	function getYPos(val, scale, hgt) {
-		if (val == null)
-			return val;
+		if (val == null) return val;
 
 		let pctY = (val - scale.min) / (scale.max - scale.min);
 		return round((1 - pctY) * hgt);
@@ -390,25 +390,18 @@ export default function uPlot(opts, data) {
 
 		// for flat data, always use 0 as one chart extreme
 		if (delta == 0) {
-			if (dataMax > 0)
-				snappedMin = 0;
-			else if (dataMax < 0)
-				snappedMax = 0;
-		}
-		else {
+			if (dataMax > 0) snappedMin = 0;
+			else if (dataMax < 0) snappedMax = 0;
+		} else {
 			// if buffer is too small, increase it
-			if (snappedMax - dataMax < incr)
-				snappedMax += incr;
+			if (snappedMax - dataMax < incr) snappedMax += incr;
 
-			if (dataMin - snappedMin < incr)
-				snappedMin -= incr;
+			if (dataMin - snappedMin < incr) snappedMin -= incr;
 
 			// if original data never crosses 0, use 0 as one chart extreme
-			if (dataMin >= 0 && snappedMin < 0)
-				snappedMin = 0;
+			if (dataMin >= 0 && snappedMin < 0) snappedMin = 0;
 
-			if (dataMax <= 0 && snappedMax > 0)
-				snappedMax = 0;
+			if (dataMax <= 0 && snappedMax > 0) snappedMax = 0;
 		}
 
 		return [snappedMin, snappedMax];
@@ -419,7 +412,12 @@ export default function uPlot(opts, data) {
 		// get the timezone-adjusted date
 		let minDate = self.tzDate(scaleMin);
 		// get ts of 12am (this lands us at or before the original scaleMin)
-		let min00 = +(new Date(minDate[getFullYear](), minDate[getMonth](), minDate[getDate]())) / 1000;
+		let min00 =
+			+new Date(
+				minDate[getFullYear](),
+				minDate[getMonth](),
+				minDate[getDate]()
+			) / 1000;
 		minDate /= 1000;
 		let tzOffset = scaleMin - minDate;
 		scaleMin = min00 + tzOffset + incrRoundUp(minDate - min00, incr);
@@ -439,7 +437,7 @@ export default function uPlot(opts, data) {
 			let sc = scales[k];
 
 			if (minMaxes[k] == null) {
-				minMaxes[k] = {min: sc.min, max: sc.max};
+				minMaxes[k] = { min: sc.min, max: sc.max };
 				sc.min = inf;
 				sc.max = -inf;
 			}
@@ -449,14 +447,18 @@ export default function uPlot(opts, data) {
 				let minMax = sc.range(data[0][self.i0], data[0][self.i1]);
 				sc.min = s.min = minMax[0];
 				sc.max = s.max = minMax[1];
-			}
-			else if (s.show) {
+			} else if (s.show) {
 				// only run getMinMax() for invalidated series data, else reuse
-				let minMax = s.min == inf ? (sc.auto ? getMinMax(data[i], self.i0, self.i1) : [0,100]) : [s.min, s.max];
+				let minMax =
+					s.min == inf
+						? sc.auto
+							? getMinMax(data[i], self.i0, self.i1)
+							: [0, 100]
+						: [s.min, s.max];
 
 				// initial min/max
-				sc.min = min(sc.min, s.min = minMax[0]);
-				sc.max = max(sc.max, s.max = minMax[1]);
+				sc.min = min(sc.min, (s.min = minMax[0]));
+				sc.max = max(sc.max, (s.max = minMax[1]));
 			}
 		});
 
@@ -514,13 +516,39 @@ export default function uPlot(opts, data) {
 
 	function drawSeries() {
 		series.forEach((s, i) => {
-			if (i > 0 && s.show && s.path == null)
-				buildPath(i, data[0], data[i], scales[series[0].scale], scales[s.scale]);
+			console.log("s", s, "s.type", s.type, "s.show", s.show)
+			if (i > 0 && s.show && s.path == null) {
+				console.log("s", s);
+				switch (s.type) {
+					case "scatter":
+						drawScatter(
+							i,
+							data[0],
+							data[i],
+							scales[series[0].scale],
+							scales[s.scale]
+						);
+						break;
+					case "line":
+						buildPath(
+							i,
+							data[0],
+							data[i],
+							scales[series[0].scale],
+							scales[s.scale]
+						);
+						break;
+					default:
+						break;
+				}
+			}
 		});
 
 		series.forEach((s, i) => {
-			if (i > 0 && s.show)
+			/** This section updates line series since the path is already built */
+			if (i > 0 && s.show && s.type == "line") {
 				drawPath(i);
+			}
 		});
 	}
 
@@ -531,26 +559,43 @@ export default function uPlot(opts, data) {
 			const path = s.path;
 			const width = s[WIDTH];
 			const offset = (width % 2) / 2;
-
-			setCtxStyle(s.color, width, s.dash, s.fill);
+			setCtxStyle(s.color, s.width, s.dash, s.fill);
 
 			ctx.translate(offset, offset);
 
-			if (s.band)
-				ctx.fill(path);
-			else
-				ctx.stroke(path);
+			if (s.band) ctx.fill(path);
+			else ctx.stroke(path);
 
 			ctx.translate(-offset, -offset);
 		}
 
-		if (s.band)
-			dir *= -1;
+		if (s.band) dir *= -1;
+	}
+
+	function drawScatter(is, xdata, ydata, scaleX, scaleY) {
+		const s = series[is];
+		// const path = s.path = dir == 1 ? new Path2D() : series[is-1].path;
+		const width = s[WIDTH];
+		const offset = (width % 2) / 2;
+
+		ctx.fillStyle = s.color;
+
+		for (
+			let i = dir == 1 ? self.i0 : self.i1;
+			dir == 1 ? i <= self.i1 : i >= self.i0;
+			i += dir
+		) {
+			x = getXPos(xdata[i], scaleX, can[WIDTH]);
+			y = getYPos(ydata[i], scaleY, can[HEIGHT]);
+
+			ctx.fillRect(x, y, 7, 7);
+			// ctx.fillText(v.toFixed(0), x + 9, y +7);
+		}
 	}
 
 	function buildPath(is, xdata, ydata, scaleX, scaleY) {
 		const s = series[is];
-		const path = s.path = dir == 1 ? new Path2D() : series[is-1].path;
+		const path = (s.path = dir == 1 ? new Path2D() : series[is - 1].path);
 		const width = s[WIDTH];
 		const offset = (width % 2) / 2;
 
@@ -559,37 +604,40 @@ export default function uPlot(opts, data) {
 		let minY = inf,
 			maxY = -inf,
 			prevX = dir == 1 ? offset : can[WIDTH] + offset,
-			prevY, x, y;
+			prevY,
+			x,
+			y;
 
-		for (let i = dir == 1 ? self.i0 : self.i1; dir == 1 ? i <= self.i1 : i >= self.i0; i += dir) {
+		for (
+			let i = dir == 1 ? self.i0 : self.i1;
+			dir == 1 ? i <= self.i1 : i >= self.i0;
+			i += dir
+		) {
 			x = getXPos(xdata[i], scaleX, can[WIDTH]);
 			y = getYPos(ydata[i], scaleY, can[HEIGHT]);
 
-			if (dir == -1 && i == self.i1)
-				path.lineTo(x, y);
+			if (dir == -1 && i == self.i1) path.lineTo(x, y);
 
 			// bug: will break filled areas due to moveTo
-			if (y == null) {				// data gaps
+			if (y == null) {
+				// data gaps
 				gap = true;
 				path.moveTo(x, prevY);
-			}
-			else {
+			} else {
 				if ((dir == 1 ? x - prevX : prevX - x) >= width) {
 					if (gap) {
 						path.moveTo(x, y);
 						gap = false;
-					}
-					else if (dir == 1 ? i > self.i0 : i < self.i1) {
-						path.lineTo(prevX, maxY);		// cannot be moveTo if we intend to fill the path
+					} else if (dir == 1 ? i > self.i0 : i < self.i1) {
+						path.lineTo(prevX, maxY); // cannot be moveTo if we intend to fill the path
 						path.lineTo(prevX, minY);
-						path.lineTo(prevX, prevY);		// cannot be moveTo if we intend to fill the path
+						path.lineTo(prevX, prevY); // cannot be moveTo if we intend to fill the path
 						path.lineTo(x, y);
 					}
 
 					minY = maxY = y;
 					prevX = x;
-				}
-				else {
+				} else {
 					minY = min(y, minY);
 					maxY = max(y, maxY);
 				}
@@ -599,8 +647,7 @@ export default function uPlot(opts, data) {
 		}
 
 		if (s.band) {
-			if (dir == -1)
-				path.closePath();
+			if (dir == -1) path.closePath();
 
 			dir *= -1;
 		}
@@ -613,8 +660,7 @@ export default function uPlot(opts, data) {
 		for (var i = 0; i < incrs.length; i++) {
 			let space = incrs[i] * pxPerUnit;
 
-			if (space >= minSpace)
-				return [incrs[i], space];
+			if (space >= minSpace) return [incrs[i], space];
 		}
 	}
 
@@ -631,8 +677,7 @@ export default function uPlot(opts, data) {
 
 	function clearFrom(ch) {
 		let next;
-		while (next = ch[nextSibling])
-			next.remove();
+		while ((next = ch[nextSibling])) next.remove();
 		ch.remove();
 	}
 
@@ -651,9 +696,14 @@ export default function uPlot(opts, data) {
 				return;
 			}
 
-			let {min, max} = scale;
+			let { min, max } = scale;
 
-			let [incr, space] = findIncr(max - min, axis.incrs, can[dim], axis.space(min, max, can[dim]));
+			let [incr, space] = findIncr(
+				max - min,
+				axis.incrs,
+				can[dim],
+				axis.space(min, max, can[dim])
+			);
 
 			[min, max] = axis.range(min, max, incr);
 
@@ -666,12 +716,18 @@ export default function uPlot(opts, data) {
 			let cssProp = ori == 0 ? LEFT : TOP;
 
 			// TODO: filter ticks & offsets that will end up off-canvas
-			let canOffs = ticks.map(val => getPos(val, scale, can[dim]));		// bit of waste if we're not drawing a grid
+			let canOffs = ticks.map(val => getPos(val, scale, can[dim])); // bit of waste if we're not drawing a grid
 
 			let labels = axis.values.call(self, ticks, space);
 
 			canOffs.forEach((off, i) => {
-				ch = gridLabel(ch, axis.vals, labels[i], cssProp, round(off/pxRatio))[nextSibling];
+				ch = gridLabel(
+					ch,
+					axis.vals,
+					labels[i],
+					cssProp,
+					round(off / pxRatio)
+				)[nextSibling];
 			});
 
 			ch && clearFrom(ch);
@@ -695,8 +751,7 @@ export default function uPlot(opts, data) {
 						my = 0;
 						ly = can[xDim];
 						mx = lx = off;
-					}
-					else {
+					} else {
 						mx = 0;
 						lx = can[xDim];
 						my = ly = off;
@@ -722,8 +777,7 @@ export default function uPlot(opts, data) {
 	}
 
 	function setView(_i0, _i1) {
-		if (_i0 != self.i0 || _i1 != self.i1)
-			resetSeries();
+		if (_i0 != self.i0 || _i1 != self.i1) resetSeries();
 
 		self.i0 = _i0;
 		self.i1 = _i1;
@@ -737,7 +791,7 @@ export default function uPlot(opts, data) {
 
 	self.setView = setView;
 
-//	INTERACTION
+	//	INTERACTION
 
 	let vt;
 	let hz;
@@ -748,24 +802,22 @@ export default function uPlot(opts, data) {
 	if (cursor.show) {
 		vt = placeDiv("vt", plot);
 		hz = placeDiv("hz", plot);
-		x = canCssWidth/2;
-		y = canCssHeight/2;
+		x = canCssWidth / 2;
+		y = canCssHeight / 2;
 	}
 
 	// zoom region
 	const region = placeDiv("region", plot);
-
 	const leg = placeDiv("legend", root);
 
 	function toggleDOM(i, onOff) {
 		let s = series[i];
 		let label = legendLabels[i];
 
-		if (s.show)
-			label[classList].remove("off")
+		if (s.show) label[classList].remove("off");
 		else {
 			label[classList].add("off");
-			trans(cursorPts[i], 0, -10)
+			trans(cursorPts[i], 0, -10);
 		}
 	}
 
@@ -778,7 +830,7 @@ export default function uPlot(opts, data) {
 
 			if (s.band) {
 				// not super robust, will break if two bands are adjacent
-				let ip = series[i+1].band ? i+1 : i-1;
+				let ip = series[i + 1].band ? i + 1 : i - 1;
 				series[ip].show = s.show;
 				toggleDOM(ip, onOff);
 			}
@@ -809,6 +861,9 @@ export default function uPlot(opts, data) {
 		if (i > 0 && s.show) {
 			let pt = placeDiv("point", plot);
 			pt.style.background = s.color;
+			pt.style.width = 4;
+			pt.style.height = 4;
+	
 			return pt;
 		}
 	});
@@ -826,17 +881,25 @@ export default function uPlot(opts, data) {
 
 	function trans(el, xPos, yPos) {
 		el.style.transform = "translate(" + xPos + "px," + yPos + "px)";
+		
 	}
+	function changePointerThickness(el, width) {
+		const pointerSize = width + "px";
+		el.style.width = pointerSize;
+		el.style.height = pointerSize;
+
+	}
+
 
 	function updatePointer(pub) {
 		rafPending = false;
 
 		if (cursor.show) {
-			trans(vt,x,0);
-			trans(hz,0,y);
+			trans(vt, x, 0);
+			trans(hz, 0, y);
 		}
 
-	//	let pctY = 1 - (y / rect[HEIGHT]);
+		//	let pctY = 1 - (y / rect[HEIGHT]);
 
 		let idx = closestIdxFromXpos(x);
 
@@ -848,10 +911,11 @@ export default function uPlot(opts, data) {
 			if (i > 0 && s.show) {
 				let yPos = getYPos(data[i][idx], scales[s.scale], canCssHeight);
 
-				if (yPos == null)
-					yPos = -10;
+				if (yPos == null) yPos = -10;
 
-				trans(cursorPts[i], xPos, yPos);
+				trans(cursorPts[i], xPos - s.width/2, yPos - s.width/2);
+				/* Change pointer size to match the line's thickness so that that pointer is always visible*/
+				changePointerThickness(cursorPts[i], s.width + 4)
 			}
 
 			if (legend.show)
@@ -866,7 +930,8 @@ export default function uPlot(opts, data) {
 			setStylePx(region, WIDTH, maxX - minX);
 		}
 
-		pub !== false && sync.pub(mousemove, self, x, y, canCssWidth, canCssHeight, idx);
+		pub !== false &&
+			sync.pub(mousemove, self, x, y, canCssWidth, canCssHeight, idx);
 	}
 
 	let x0 = null;
@@ -881,8 +946,7 @@ export default function uPlot(opts, data) {
 	}
 
 	function mouseMove(e, src, _x, _y, _w, _h, _i) {
-		if (rect == null)
-			syncRect();
+		if (rect == null) syncRect();
 
 		if (e != null) {
 			x = e.clientX - rect.left;
@@ -892,15 +956,14 @@ export default function uPlot(opts, data) {
 				rafPending = true;
 				rAF(updatePointer);
 			}
-		}
-		else {
-			x = canCssWidth * (_x/_w);
-			y = canCssHeight * (_y/_h);
+		} else {
+			x = canCssWidth * (_x / _w);
+			y = canCssHeight * (_y / _h);
 			updatePointer(false);
 		}
 	}
 
-	const evOpts = {passive: true};
+	const evOpts = { passive: true };
 
 	function on(ev, el, cb) {
 		el.addEventListener(ev, cb, evOpts);
@@ -919,11 +982,18 @@ export default function uPlot(opts, data) {
 				y0 = e.clientY - rect.top;
 
 				on(mouseup, doc, mouseUp);
-				sync.pub(mousedown, self, x0, y0, canCssWidth, canCssHeight, null);
-			}
-			else {
-				x0 = canCssWidth * (_x/_w);
-				y0 = canCssHeight * (_y/_h);
+				sync.pub(
+					mousedown,
+					self,
+					x0,
+					y0,
+					canCssWidth,
+					canCssHeight,
+					null
+				);
+			} else {
+				x0 = canCssWidth * (_x / _w);
+				y0 = canCssHeight * (_y / _h);
 			}
 		}
 	}
@@ -939,10 +1009,7 @@ export default function uPlot(opts, data) {
 				let minX = min(x0, x);
 				let maxX = max(x0, x);
 
-				setView(
-					closestIdxFromXpos(minX),
-					closestIdxFromXpos(maxX),
-				);
+				setView(closestIdxFromXpos(minX), closestIdxFromXpos(maxX));
 			}
 
 			if (e != null) {
@@ -953,8 +1020,7 @@ export default function uPlot(opts, data) {
 	}
 
 	function dblClick(e, src, _x, _y, _w, _h, _i) {
-		if (self.i0 == 0 && self.i1 == dataLen - 1)
-			return;
+		if (self.i0 == 0 && self.i1 == dataLen - 1) return;
 
 		setView(0, dataLen - 1);
 
@@ -969,8 +1035,7 @@ export default function uPlot(opts, data) {
 	events[mouseup] = mouseUp;
 	events[dblclick] = dblClick;
 
-	for (let ev in events)
-		ev != mouseup && on(ev, can, events[ev]);
+	for (let ev in events) ev != mouseup && on(ev, can, events[ev]);
 
 	let deb = debounce(syncRect, 100);
 
@@ -981,7 +1046,10 @@ export default function uPlot(opts, data) {
 
 	let syncKey = cursor.sync;
 
-	let sync = syncKey != null ? (syncs[syncKey] = syncs[syncKey] || _sync()) : _sync();
+	let sync =
+		syncKey != null
+			? (syncs[syncKey] = syncs[syncKey] || _sync())
+			: _sync();
 
 	sync.sub(self);
 
