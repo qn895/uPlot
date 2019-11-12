@@ -2,10 +2,10 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title>μPlot Demo</title>
+		<title>Missing Data</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 
-		<link rel="stylesheet" href="style.css">
+		<link rel="stylesheet" href="../bench/style.css">
 		<link rel="stylesheet" href="../src/uPlot.css">
 	</head>
 	<body>
@@ -45,26 +45,25 @@
 					data[3][j] = packed[i+3];
 				}
 
-			/*
-				function filter(d) {
-					return d.filter((d, i) => Math.round(i/1000) % 5 != 2);
-				}
-
-				data[0] = filter(data[0]);
-				data[1] = filter(data[1]);
-				data[2] = filter(data[2]);
-				data[3] = filter(data[3]);
-			*/
-			/*
-				data[0] = data[0].slice(0, 1000);
-				data[1] = data[1].slice(0, 1000);
-				data[2] = data[2].slice(0, 1000);
-				data[3] = data[3].slice(0, 1000);
+				data[0] = data[0].slice(0, 200);
+				data[1] = data[1].slice(0, 200);
+				data[2] = data[2].slice(0, 200);
+				data[3] = data[3].slice(0, 200);
 
 				data[1][35] = null;
 				data[1][36] = null;
-				data[2][730] = null;
-			*/
+				data[1][37] = null;
+				data[1][38] = null;
+				data[1][39] = null;
+				data[1][40] = null;
+
+				data[2][79] = null;
+				data[2][80] = null;
+				data[2][91] = null;
+				data[2][125] = null;
+				data[2][126] = null;
+				data[2][127] = null;
+
 				console.timeEnd('prep');
 
 				return data;
@@ -74,10 +73,8 @@
 				console.time('chart');
 
 				const opts = {
-					title: "Server Events",
 					width: 1920,
 					height: 600,
-//					scales: {},
 					series: {
 						y: [
 							{
@@ -116,9 +113,8 @@
 					}
 				};
 
-				let uplot = new uPlot.Line(opts, data);
-
-				document.body.appendChild(uplot.root);
+				let uplot1 = new uPlot.Line(opts, data);
+				document.body.appendChild(uplot1.root);
 
 				wait.textContent = "Done!";
 				console.timeEnd('chart');
@@ -126,7 +122,7 @@
 
 			let wait = document.getElementById("wait");
 			wait.textContent = "Fetching data.json (2.07MB)....";
-			fetch("data.json").then(r => r.json()).then(packed => {
+			fetch("../bench/data.json").then(r => r.json()).then(packed => {
 				wait.textContent = "Rendering...";
 				let data = prepData(packed);
 				setTimeout(() => makeChart(data), 0);

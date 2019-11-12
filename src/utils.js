@@ -41,6 +41,7 @@ export const pxRatio = devicePixelRatio;
 
 const M = Math;
 
+export const abs = M.abs;
 export const floor = M.floor;
 export const round = M.round;
 export const ceil = M.ceil;
@@ -48,6 +49,18 @@ export const min = M.min;
 export const max = M.max;
 export const pow = M.pow;
 export const log10 = M.log10;
+
+export const inf = Infinity;
+
+/*
+export function incrRound() {
+	return round(num/incr)*incr;
+}
+*/
+
+export function fnOrSelf(v) {
+	return typeof v == "function" ? v : () => v;
+}
 
 export function incrRoundUp(num, incr) {
 	return ceil(num/incr)*incr;
@@ -57,6 +70,18 @@ export function incrRoundDn(num, incr) {
 	return floor(num/incr)*incr;
 }
 
+export function round2(val) {
+	return round(val * 1e2) / 1e2;
+}
+
+export function round3(val) {
+	return round(val * 1e3) / 1e3;
+}
+
+export function round6(val) {
+	return round(val * 1e6) / 1e6;
+}
+
 export const WIDTH = "width";
 export const HEIGHT = "height";
 export const TOP = "top";
@@ -64,10 +89,21 @@ export const BOTTOM = "bottom";
 export const LEFT = "left";
 export const RIGHT = "right";
 export const firstChild = "firstChild";
+export const nextSibling = "nextSibling";
 export const createElement = "createElement";
 export const hexBlack = "#000";
+export const classList = "classList";
+
+export const mousemove = "mousemove";
+export const mousedown = "mousedown";
+export const mouseup = "mouseup";
+export const dblclick = "dblclick";
+export const resize = "resize";
+export const scroll = "scroll";
 
 export const assign = Object.assign;
+
+export const isArr = Array.isArray;
 
 /*
 function isObj(v) {

@@ -2,14 +2,20 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title>μPlot Demo</title>
+		<title>Sync Cursor</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 
-		<link rel="stylesheet" href="style.css">
+		<link rel="stylesheet" href="../bench/style.css">
 		<link rel="stylesheet" href="../src/uPlot.css">
+		<style>
+			.uplot {
+				display: inline-block;
+				vertical-align: top;
+			}
+		</style>
 	</head>
 	<body>
-		<script src="../dist/uPlot.iife.min.js"></script>
+		<script src="../dist/uPlot.iife.js"></script>
 		<h2 id="wait">Loading lib....</h2>
 
 		<script>
@@ -45,26 +51,11 @@
 					data[3][j] = packed[i+3];
 				}
 
-			/*
-				function filter(d) {
-					return d.filter((d, i) => Math.round(i/1000) % 5 != 2);
-				}
-
-				data[0] = filter(data[0]);
-				data[1] = filter(data[1]);
-				data[2] = filter(data[2]);
-				data[3] = filter(data[3]);
-			*/
-			/*
 				data[0] = data[0].slice(0, 1000);
 				data[1] = data[1].slice(0, 1000);
 				data[2] = data[2].slice(0, 1000);
 				data[3] = data[3].slice(0, 1000);
 
-				data[1][35] = null;
-				data[1][36] = null;
-				data[2][730] = null;
-			*/
 				console.timeEnd('prep');
 
 				return data;
@@ -74,18 +65,13 @@
 				console.time('chart');
 
 				const opts = {
-					title: "Server Events",
-					width: 1920,
-					height: 600,
-//					scales: {},
+					width: 1120,
+					height: 800,
+					cursor: {
+						sync: "moo",
+					},
 					series: {
 						y: [
-							{
-								label: "CPU",
-								scale: "%",
-								value: v => v == null ? "-" : v.toFixed(1) + "%",
-								color: "red",
-							},
 							{
 								label: "RAM",
 								scale: "%",
@@ -116,17 +102,65 @@
 					}
 				};
 
-				let uplot = new uPlot.Line(opts, data);
+				let uplot1 = new uPlot.Line(opts, [
+					data[0],
+					data[2],
+					data[3],
+				]);
 
-				document.body.appendChild(uplot.root);
+				document.body.appendChild(uplot1.root);
+
+				const opts2 = {
+					width: 800,
+					height: 600,
+					cursor: {
+						sync: "moo",
+					},
+					series: {
+						y: [
+							{
+								label: "CPU",
+								scale: "%",
+								value: v => v == null ? "-" : v.toFixed(1) + "%",
+								color: "red",
+							},
+						],
+					},
+					axes: {
+						y: [
+							{
+								scale: '%',
+								values: (vals, space) => vals.map(v => +v.toFixed(1) + "%"),
+							},
+						],
+					}
+				};
+
+				let uplot2 = new uPlot.Line(opts2, [
+					data[0],
+					data[1],
+				]);
+
+				document.body.appendChild(uplot2.root);
 
 				wait.textContent = "Done!";
 				console.timeEnd('chart');
+/*
+				setTimeout(() => {
+					uplot1.destroy();
+					delete uplot1;
+				}, 5000);
+
+				setTimeout(() => {
+					uplot2.destroy();
+					delete uplot2;
+				}, 10000);
+*/
 			}
 
 			let wait = document.getElementById("wait");
 			wait.textContent = "Fetching data.json (2.07MB)....";
-			fetch("data.json").then(r => r.json()).then(packed => {
+			fetch("../bench/data.json").then(r => r.json()).then(packed => {
 				wait.textContent = "Rendering...";
 				let data = prepData(packed);
 				setTimeout(() => makeChart(data), 0);
