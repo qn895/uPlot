@@ -1,11 +1,11 @@
 ## 📈 μPlot
 
-An [exceptionally fast](#performance), tiny ([< 15 KB min](https://github.com/leeoniya/uPlot/tree/master/dist/uPlot.iife.min.js)) time series chart _(MIT Licensed)_
+An [exceptionally fast](#performance), tiny ([< 15 KB min](https://github.com/leeoniya/uPlot/tree/master/dist/uPlot.iife.min.js)) time series & line chart _(MIT Licensed)_
 
 ---
 ### Introduction
 
-μPlot is a [fast, memory-efficient](#performance) [time series](https://en.wikipedia.org/wiki/Time_series) chart based on [Canvas 2D](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D); from a cold start it can create an interactive chart containing 150,000 data points in 40ms. In addition to fast initial render, the zooming and cursor performance is by far the best of any similar charting lib; at < 15 KB, it's likely the smallest and fastest time series plotter that doesn't make use of WebGL shaders or WASM, both of which have much higher startup cost and code size.
+μPlot is a [fast, memory-efficient](#performance) [time series](https://en.wikipedia.org/wiki/Time_series) & line chart based on [Canvas 2D](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D); from a cold start it can create an interactive chart containing 150,000 data points in 40ms, scaling linearly at ~4,000 pts/ms. In addition to fast initial render, the zooming and cursor performance is by far the best of any similar charting lib; at < 15 KB, it's likely the smallest and fastest time series plotter that doesn't make use of WebGL shaders or WASM, both of which have much higher startup cost and code size.
 
 <h3 align="center">166,650 point bench: <a href="https://leeoniya.github.io/uPlot/bench/uPlot.html">https://leeoniya.github.io/uPlot/bench/uPlot.html</a></h3>
 
@@ -31,8 +31,11 @@ v1.0 and API stabilization are loosely targetted for sometime before 2020-01-01.
 - Support for [IANA Time Zone Names](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
 - [Support for missing data](https://leeoniya.github.io/uPlot/demos/missing-data.html)
 - [Cursor sync for multiple charts](https://leeoniya.github.io/uPlot/demos/sync-cursor.html)
+- [Focus closest series](https://leeoniya.github.io/uPlot/demos/focus-cursor.html)
 - [Data streaming (live update)](https://leeoniya.github.io/uPlot/demos/stream-data.html)
 - [High / Low bands](https://leeoniya.github.io/uPlot/demos/high-low-bands.html)
+- WIP: [Range, point & line annotations](https://github.com/leeoniya/uPlot/issues/27)
+- WIP: [.resize()](https://github.com/leeoniya/uPlot/issues/36)
 
 ---
 ### Non-Features
@@ -48,7 +51,7 @@ In order to stay lean, fast and focused the following features will not be added
 ---
 ### Usage & API
 
-Example: https://jsfiddle.net/oh0xtzn5/
+Example: https://jsfiddle.net/4o0ge9wx/
 
 ```html
 <link rel="stylesheet" href="src/uPlot.css">
@@ -104,11 +107,16 @@ Example: https://jsfiddle.net/oh0xtzn5/
         },
     };
 
-    let uplot = new uPlot(opts, data);
+    let uplot = new uPlot.Line(opts, data);
 
     document.body.appendChild(uplot.root);
 </script>
 ```
+
+---
+### Documentation
+
+WIP: https://github.com/leeoniya/uPlot/issues/48
 
 ---
 ### Performance
@@ -126,7 +134,8 @@ Benchmarks done on a ThinkPad T480S:
             <th>Size (min)</th>
             <th>Render (167k)</th>
             <th>Total</th>
-            <th>JS Heap</th>
+            <th>Mem (peak)</th>
+            <th>Mem (retained)</th>
             <th>Interact (10s)</th>
         </tr>
     </thead>
@@ -136,7 +145,8 @@ Benchmarks done on a ThinkPad T480S:
             <td>15 KB</td>
             <td>39 ms</td>
             <td>71 ms</td>
-            <td>19.1 MB</td>
+            <td>19.6 MB</td>
+            <td>3.7 MB</td>
             <td>154 ms</td>
         </tr>
         <tr>
@@ -145,6 +155,7 @@ Benchmarks done on a ThinkPad T480S:
             <td>130 ms</td>
             <td>190 ms</td>
             <td>42.7 MB</td>
+            <td>17.3 MB</td>
             <td>--</td>
         </tr>
         <tr>
@@ -153,6 +164,7 @@ Benchmarks done on a ThinkPad T480S:
             <td>168 ms</td>
             <td>251 ms</td>
             <td>113 MB</td>
+            <td>66.0 MB</td>
             <td>2569 ms</td>
         </tr>
         <tr>
@@ -161,6 +173,7 @@ Benchmarks done on a ThinkPad T480S:
             <td>295 ms</td>
             <td>414 ms</td>
             <td>49.2 MB</td>
+            <td>39.1 MB</td>
             <td>2401 ms</td>
         </tr>
         <tr>
@@ -169,6 +182,7 @@ Benchmarks done on a ThinkPad T480S:
             <td>450 ms</td>
             <td>577 ms</td>
             <td>142 MB</td>
+            <td>99.9 MB</td>
             <td>600 ms</td>
         </tr>
         <tr>
@@ -177,6 +191,7 @@ Benchmarks done on a ThinkPad T480S:
             <td>513 ms</td>
             <td>765 ms</td>
             <td>179 MB</td>
+            <td>118.8 MB</td>
             <td>2194 ms</td>
         </tr>
         <tr>
@@ -185,14 +200,16 @@ Benchmarks done on a ThinkPad T480S:
             <td>573 ms</td>
             <td>717 ms</td>
             <td>71.7 MB</td>
+            <td>40.7 MB</td>
             <td>1122 ms</td>
         </tr>
         <tr>
             <td><a href="https://leeoniya.github.io/uPlot/bench/Chart.js.html">Chart.js</a></td>
             <td>153 KB</td>
-            <td>747 ms</td>
-            <td>818 ms</td>
-            <td>141 MB</td>
+            <td>653 ms</td>
+            <td>741 ms</td>
+            <td>117 MB</td>
+            <td>78.9 MB</td>
             <td>5408 ms</td>
         </tr>
         <tr>
@@ -201,6 +218,7 @@ Benchmarks done on a ThinkPad T480S:
             <td>1269 ms</td>
             <td>2441 ms</td>
             <td>142 MB</td>
+            <td>157.9 MB</td>
             <td>7559 ms</td>
         </tr>
         <tr>
@@ -209,6 +227,7 @@ Benchmarks done on a ThinkPad T480S:
             <td>2324 ms</td>
             <td>2518 ms</td>
             <td>220 MB</td>
+            <td>175.7 MB</td>
             <td>--</td>
         </tr>
         <tr>
@@ -217,10 +236,12 @@ Benchmarks done on a ThinkPad T480S:
             <td>6514 ms</td>
             <td>6730 ms</td>
             <td>397 MB</td>
+            <td>430.0 MB</td>
             <td>7539 ms</td>
         </tr>
         <tr>
             <td>Chartist.js</td>
+            <td>--</td>
             <td>--</td>
             <td>--</td>
             <td>--</td>
@@ -234,9 +255,11 @@ Benchmarks done on a ThinkPad T480S:
             <td>--</td>
             <td>--</td>
             <td>--</td>
+            <td>--</td>
         </tr>
         <tr>
             <td>dc.js (d3-based)</td>
+            <td>--</td>
             <td>--</td>
             <td>--</td>
             <td>--</td>
@@ -250,6 +273,7 @@ Benchmarks done on a ThinkPad T480S:
             <td>--</td>
             <td>--</td>
             <td>--</td>
+            <td>--</td>
         </tr>
         <tr>
             <td>MetricsGraphics (d3-based)</td>
@@ -258,9 +282,11 @@ Benchmarks done on a ThinkPad T480S:
             <td>--</td>
             <td>--</td>
             <td>--</td>
+            <td>--</td>
         </tr>
         <tr>
             <td>rickshaw (d3-based)</td>
+            <td>--</td>
             <td>--</td>
             <td>--</td>
             <td>--</td>

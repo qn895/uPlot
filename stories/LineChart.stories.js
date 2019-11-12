@@ -27,6 +27,13 @@ const generateOpts = (multiplier) => {
   const opts = {
     width: 800,
     height: 400,
+    cursor: {
+      focus: {
+        alpha: 0.3,
+        prox: 30,
+      }
+    },
+
     scales: {
       x: {
         time: false,
@@ -48,15 +55,16 @@ const generateOpts = (multiplier) => {
           color: "green",
           width: multiplier,
           type: 'line',
-          dash: [5, 15]
-        },
+          // width: 10,
+          // dash: [10, 5],
+},
         {
           label: "scatter data",
           scale: 'mb',
           color: "red",
-          width: 1,
-          type: 'scatter'
-          // dash: [2*multiplier, 3]
+          width: 5,
+          type: 'scatter',
+          dash: [2, 2]
         }
 
       ]
@@ -125,7 +133,7 @@ class Plot extends React.Component {
 	render() {
 		const { id } = this.props;
     this.updateData(this.props.data);
-    this.updateOpt(this.props.opts);
+    // this.updateOpt(this.props.opts);
 
 		return (
 			<div
@@ -139,18 +147,18 @@ class Plot extends React.Component {
 		);
 	}
 }
-const autoData = generateData(3);
-const opts = generateOpts(4);
 
 export const IntervalExample = () => {
-	const [seconds, setSeconds] = useState(0);
+	const [seconds, setSeconds] = useState(1);
 	useEffect(() => {
 		const interval = setInterval(() => {
       setSeconds(seconds => seconds + 1);
 		}, 2000);
 		return () => clearInterval(interval);
   }, []);
-  // console.log("seconds", seconds, "opts", opts)
+  const autoData = generateData(seconds);
+  const opts = generateOpts(seconds);
+
 	return (
 		<Plot id={"my-uuid"} opts={opts} data ={autoData}>
 		</Plot>
